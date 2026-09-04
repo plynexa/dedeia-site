@@ -1,8 +1,8 @@
 export const colors = {
-  coral: "#e96854",
-  coralDark: "#c84b3a",
-  coralSoft: "#fff0eb",
-  cream: "#fffaf7",
+  coral: "#e95e73",
+  coralDark: "#c83e58",
+  coralSoft: "#fff1f3",
+  cream: "#fff8f8",
   white: "#ffffff",
   ink: "#28242b",
   muted: "#7a737b",

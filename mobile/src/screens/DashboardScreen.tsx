@@ -168,6 +168,10 @@ export function DashboardScreen() {
   }
 
   async function addCategory(name: string) {
+    if (categories.some((item) => item.name.toLocaleLowerCase("pt-BR") === name.toLocaleLowerCase("pt-BR"))) {
+      Alert.alert("Categoria já existe", "Escolha outro nome.");
+      return;
+    }
     const result = await supabase.from("categories").insert({ name, sort_order: categories.length + 1 }).select().single();
     if (result.error) return Alert.alert("Não foi possível adicionar", result.error.message);
     setCategories((current) => [...current, result.data as Category]);
@@ -175,6 +179,10 @@ export function DashboardScreen() {
   }
 
   async function renameCategory(item: Category, name: string) {
+    if (categories.some((value) => value.id !== item.id && value.name.toLocaleLowerCase("pt-BR") === name.toLocaleLowerCase("pt-BR"))) {
+      Alert.alert("Categoria já existe", "Escolha outro nome.");
+      return;
+    }
     const productUpdate = await supabase.from("products").update({ category: name }).eq("category", item.name);
     if (productUpdate.error) return Alert.alert("Não foi possível renomear", productUpdate.error.message);
     const result = await supabase.from("categories").update({ name }).eq("id", item.id).select().single();

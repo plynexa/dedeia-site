@@ -33,7 +33,7 @@ export function ProductEditor({ value, categories, saving, onChange, onClose, on
   const image = value.local_image_uri || value.image_url;
   const previewName = value.name.trim() || "Nome do produto";
   const hasValidForm = useMemo(
-    () => value.name.trim().length >= 2 && !!value.category && Number(value.price.replace(",", ".")) >= 0 && !!image,
+    () => value.name.trim().length >= 2 && !!value.category && value.price.trim() !== "" && Number.isFinite(Number(value.price.replace(",", "."))) && Number(value.price.replace(",", ".")) >= 0 && !!image,
     [image, value],
   );
 

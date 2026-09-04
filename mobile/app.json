@@ -10,14 +10,14 @@
     "splash": {
       "image": "./assets/logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#fff8f4"
+      "backgroundColor": "#fff8f8"
     },
     "android": {
       "package": "com.plynexa.lojadadedeia.admin",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo.png",
-        "backgroundColor": "#e96854"
+        "backgroundColor": "#e95e73"
       },
       "permissions": [
         "ACCESS_COARSE_LOCATION",
