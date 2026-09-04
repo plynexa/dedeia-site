@@ -70,7 +70,11 @@ create table if not exists public.audit_events (
   created_at timestamptz not null default now()
 );
 
-create or replace function public.is_admin()
+create schema if not exists private;
+revoke all on schema private from public;
+grant usage on schema private to anon, authenticated;
+
+create or replace function private.is_admin()
 returns boolean
 language sql
 stable
@@ -81,6 +85,29 @@ as $$
     select 1 from public.admins where user_id = auth.uid()
   )
 $$;
+revoke all on function private.is_admin() from public;
+grant execute on function private.is_admin() to anon, authenticated;
+
+create or replace function private.grant_store_admin()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if lower(new.email) = 'lojadaddeia@gmail.com' then
+    insert into public.admins(user_id) values (new.id)
+    on conflict (user_id) do nothing;
+  end if;
+  return new;
+end;
+$$;
+revoke all on function private.grant_store_admin() from public, anon, authenticated;
+
+drop trigger if exists grant_store_admin_on_signup on auth.users;
+create trigger grant_store_admin_on_signup
+after insert or update of email on auth.users
+for each row execute function private.grant_store_admin();
 
 alter table public.admins enable row level security;
 alter table public.products enable row level security;
@@ -95,61 +122,61 @@ for select to authenticated using (user_id = auth.uid());
 drop policy if exists "catálogo público" on public.products;
 create policy "catálogo público" on public.products
 for select to anon, authenticated
-using ((active and not archived) or public.is_admin());
+using ((active and not archived) or private.is_admin());
 
 drop policy if exists "admin cadastra produtos" on public.products;
 create policy "admin cadastra produtos" on public.products
-for insert to authenticated with check (public.is_admin());
+for insert to authenticated with check (private.is_admin());
 
 drop policy if exists "admin altera produtos" on public.products;
 create policy "admin altera produtos" on public.products
 for update to authenticated
-using (public.is_admin()) with check (public.is_admin());
+using (private.is_admin()) with check (private.is_admin());
 
 drop policy if exists "admin exclui produtos" on public.products;
 create policy "admin exclui produtos" on public.products
-for delete to authenticated using (public.is_admin());
+for delete to authenticated using (private.is_admin());
 
 drop policy if exists "categorias públicas" on public.categories;
 create policy "categorias públicas" on public.categories
-for select to anon, authenticated using (active or public.is_admin());
+for select to anon, authenticated using (active or private.is_admin());
 
 drop policy if exists "admin cadastra categorias" on public.categories;
 create policy "admin cadastra categorias" on public.categories
-for insert to authenticated with check (public.is_admin());
+for insert to authenticated with check (private.is_admin());
 
 drop policy if exists "admin altera categorias" on public.categories;
 create policy "admin altera categorias" on public.categories
 for update to authenticated
-using (public.is_admin()) with check (public.is_admin());
+using (private.is_admin()) with check (private.is_admin());
 
 drop policy if exists "admin exclui categorias" on public.categories;
 create policy "admin exclui categorias" on public.categories
-for delete to authenticated using (public.is_admin());
+for delete to authenticated using (private.is_admin());
 
 drop policy if exists "admin registra aparelho" on public.admin_devices;
 create policy "admin registra aparelho" on public.admin_devices
 for insert to authenticated
-with check (user_id = auth.uid() and public.is_admin());
+with check (user_id = auth.uid() and private.is_admin());
 
 drop policy if exists "admin atualiza aparelho" on public.admin_devices;
 create policy "admin atualiza aparelho" on public.admin_devices
 for update to authenticated
-using (user_id = auth.uid() and public.is_admin())
-with check (user_id = auth.uid() and public.is_admin());
+using (user_id = auth.uid() and private.is_admin())
+with check (user_id = auth.uid() and private.is_admin());
 
 drop policy if exists "admin consulta aparelhos" on public.admin_devices;
 create policy "admin consulta aparelhos" on public.admin_devices
-for select to authenticated using (public.is_admin());
+for select to authenticated using (private.is_admin());
 
 drop policy if exists "admin registra evento" on public.audit_events;
 create policy "admin registra evento" on public.audit_events
 for insert to authenticated
-with check (user_id = auth.uid() and public.is_admin());
+with check (user_id = auth.uid() and private.is_admin());
 
 drop policy if exists "admin consulta eventos" on public.audit_events;
 create policy "admin consulta eventos" on public.audit_events
-for select to authenticated using (public.is_admin());
+for select to authenticated using (private.is_admin());
 
 grant usage on schema public to anon, authenticated;
 grant select on public.products to anon, authenticated;
