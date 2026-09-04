@@ -5,10 +5,10 @@ Loja virtual em Next.js pronta para Vercel, com catálogo público e administra�
 ## Ativação
 
 1. Crie um projeto no Supabase.
-2. Execute `supabase/schema.sql` no SQL Editor.
-3. Execute `supabase/mobile-upgrade.sql` para ativar categorias editáveis, estoque e registro de aparelhos.
-4. Em Authentication > Users, crie a conta da administradora.
-5. Execute o último comando comentado do SQL, usando o e-mail cadastrado.
+2. Execute somente `supabase/schema.sql` no SQL Editor. Ele prepara todas as tabelas públicas e pode ser repetido sem apagar produtos.
+3. Em Authentication > Users, crie a conta da administradora.
+4. Adicione o `user_id` criado à tabela `public.admins`.
+5. Se o Storage estiver habilitado no projeto, execute `supabase/storage-setup.sql` para liberar as fotos.
 6. Na Vercel, configure:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
