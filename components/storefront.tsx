@@ -12,19 +12,23 @@ export type Product = {
   old_price: number | null;
   image_url: string;
   active: boolean;
+  archived?: boolean;
+  stock_quantity?: number;
 };
 
 const samples: Product[] = [
-  { id:"1", name:"Perfume feminino clássico", category:"Perfume", price:129.9, old_price:149.9, image_url:"https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=800&q=85", active:true },
-  { id:"2", name:"Kit de cuidados presenteável", category:"Kit", price:89.9, old_price:null, image_url:"https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=800&q=85", active:true },
-  { id:"3", name:"Bolsa feminina casual", category:"Acessórios", price:79.9, old_price:99.9, image_url:"https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=85", active:true },
-  { id:"4", name:"Colônia floral suave", category:"Colônia", price:74.9, old_price:null, image_url:"https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=800&q=85", active:true },
+  { id:"1", name:"Perfume feminino clássico", category:"Perfume", price:129.9, old_price:149.9, image_url:"https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=800&q=85", active:true, stock_quantity:5 },
+  { id:"2", name:"Kit de cuidados presenteável", category:"Kit", price:89.9, old_price:null, image_url:"https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=800&q=85", active:true, stock_quantity:3 },
+  { id:"3", name:"Bolsa feminina casual", category:"Acessórios", price:79.9, old_price:99.9, image_url:"https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=85", active:true, stock_quantity:0 },
+  { id:"4", name:"Colônia floral suave", category:"Colônia", price:74.9, old_price:null, image_url:"https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=800&q=85", active:true, stock_quantity:4 },
 ];
-const categories=["Todos","Perfume","Colônia","Sabonete","Desodorante","Kit","Roupas","Acessórios"];
+const defaultCategories=["Perfume","Colônia","Sabonete","Desodorante","Kit","Roupas","Acessórios"];
+const whatsapp="5522998837944";
 const money=(value:number)=>value.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 
 export default function Storefront() {
   const [products,setProducts]=useState<Product[]>(samples);
+  const [categories,setCategories]=useState(["Todos",...defaultCategories]);
   const [category,setCategory]=useState("Todos");
   const [query,setQuery]=useState("");
   const [cart,setCart]=useState<Record<string,number>>({});
@@ -33,8 +37,13 @@ export default function Storefront() {
   useEffect(()=>{
     const supabase=createClient();
     if(!supabase) return;
-    supabase.from("products").select("*").eq("active",true).order("created_at",{ascending:false})
-      .then(({data})=>{ if(data?.length) setProducts(data as Product[]); });
+    Promise.all([
+      supabase.from("products").select("*").eq("active",true).order("created_at",{ascending:false}),
+      supabase.from("categories").select("name").eq("active",true).order("sort_order"),
+    ]).then(([productResult,categoryResult])=>{
+      if(productResult.data?.length) setProducts((productResult.data as Product[]).filter(product=>!product.archived));
+      if(categoryResult.data?.length) setCategories(["Todos",...categoryResult.data.map(item=>item.name)]);
+    });
   },[]);
 
   const filtered=useMemo(()=>products.filter(p=>
@@ -43,11 +52,14 @@ export default function Storefront() {
   const count=Object.values(cart).reduce((a,b)=>a+b,0);
   const total=products.reduce((sum,p)=>sum+p.price*(cart[p.id]||0),0);
   const change=(id:string,delta:number)=>setCart(current=>{
-    const next=Math.max(0,(current[id]||0)+delta);
+    const product=products.find(item=>item.id===id);
+    const limit=product?.stock_quantity??999;
+    const next=Math.min(limit,Math.max(0,(current[id]||0)+delta));
     const updated={...current,[id]:next};
     if(!next) delete updated[id];
     return updated;
   });
+  const consult=(product:Product)=>window.open(`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Olá! Gostaria de consultar o preço e encomendar: ${product.name}.`)}`,"_blank","noopener,noreferrer");
 
   return <main>
     <header className="topbar"><div className="topbar-inner">
@@ -65,10 +77,10 @@ export default function Storefront() {
       )}</nav>
       <label className="search"><Search size={20}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="O que você está procurando?"/>{query&&<button onClick={()=>setQuery("")} aria-label="Limpar busca"><X size={18}/></button>}</label>
       <div className="catalog-heading"><div><small>CATÁLOGO</small><h2>{category==="Todos"?"Escolhidos para você":category}</h2></div><span>{filtered.length} produtos</span></div>
-      <div className="product-grid">{filtered.map(p=><article className="product-card" key={p.id}>
+      <div className="product-grid">{filtered.map(p=>{const out=(p.stock_quantity??1)<=0;return <article className={`product-card${out?" out-of-stock":""}`} key={p.id}>
         <div className="product-photo"><img src={p.image_url} alt={p.name}/>{p.old_price&&<span>OFERTA</span>}</div>
-        <div className="product-body"><small>{p.category}</small><h3>{p.name}</h3>{p.old_price&&<del>{money(p.old_price)}</del>}<strong>{money(p.price)}</strong><p>ou 3x de {money(p.price/3)} sem juros</p><button onClick={()=>change(p.id,1)}><ShoppingBag size={18}/>Adicionar</button></div>
-      </article>)}</div>
+        <div className="product-body"><small>{p.category}</small><h3>{p.name}</h3>{p.old_price&&<del>{money(p.old_price)}</del>}<strong>{money(p.price)}</strong><p>ou 3x de {money(p.price/3)} sem juros</p>{out?<><span className="stock-status">Fora de estoque • Sob encomenda</span><button className="whatsapp" onClick={()=>consult(p)}>Consultar preço</button></>:<button onClick={()=>change(p.id,1)}><ShoppingBag size={18}/>Adicionar</button>}</div>
+      </article>})}</div>
     </section>
 
     <footer><strong>Loja da Dedeia</strong><p>Uma loja feita com carinho.</p><span>Site desenvolvido pela Plynexa</span></footer>

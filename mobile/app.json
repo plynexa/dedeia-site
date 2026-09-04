@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "Loja da Dedeia Admin",
+    "slug": "loja-da-dedeia-admin",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/logo.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#fff8f4"
+    },
+    "android": {
+      "package": "com.plynexa.lojadadedeia.admin",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/logo.png",
+        "backgroundColor": "#e96854"
+      },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
+    },
+    "plugins": [
+      "expo-sqlite",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permitir que a Loja da Dedeia escolha fotos dos produtos.",
+          "cameraPermission": "Permitir que a Loja da Dedeia fotografe os produtos.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Permitir localização aproximada para registrar o aparelho administrador."
+        }
+      ]
+    ]
+  }
+}

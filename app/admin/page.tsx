@@ -13,6 +13,9 @@ export default async function AdminPage() {
   const {data:admin}=await supabase.from("admins").select("user_id").eq("user_id",userId).maybeSingle();
   if(!admin) redirect("/admin/login?erro=sem-permissao");
 
-  const {data:products}=await supabase.from("products").select("*").order("created_at",{ascending:false});
-  return <AdminPanel initialProducts={products??[]}/>;
+  const [{data:products},{data:categories}]=await Promise.all([
+    supabase.from("products").select("*").order("created_at",{ascending:false}),
+    supabase.from("categories").select("name").eq("active",true).order("sort_order"),
+  ]);
+  return <AdminPanel initialProducts={products??[]} initialCategories={categories?.map(item=>item.name)??[]}/>;
 }
