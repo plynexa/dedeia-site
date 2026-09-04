@@ -26,21 +26,22 @@ begin
   execute $sql$
     create policy "admin envia fotos" on storage.objects
     for insert to authenticated
-    with check (bucket_id = 'product-images' and public.is_admin())
+    with check (bucket_id = 'product-images' and private.is_admin())
   $sql$;
 
   execute $sql$drop policy if exists "admin altera fotos" on storage.objects$sql$;
   execute $sql$
     create policy "admin altera fotos" on storage.objects
     for update to authenticated
-    using (bucket_id = 'product-images' and public.is_admin())
+    using (bucket_id = 'product-images' and private.is_admin())
+    with check (bucket_id = 'product-images' and private.is_admin())
   $sql$;
 
   execute $sql$drop policy if exists "admin exclui fotos" on storage.objects$sql$;
   execute $sql$
     create policy "admin exclui fotos" on storage.objects
     for delete to authenticated
-    using (bucket_id = 'product-images' and public.is_admin())
+    using (bucket_id = 'product-images' and private.is_admin())
   $sql$;
 end
 $setup$;
