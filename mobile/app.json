@@ -2,7 +2,7 @@
   "expo": {
     "name": "Loja da Dedeia",
     "slug": "loja-da-dedeia-admin",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "light",
@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.plynexa.lojadadedeia.admin",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#e95e73"
