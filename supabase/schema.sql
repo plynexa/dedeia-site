@@ -16,6 +16,8 @@ create table if not exists public.products (
   price numeric(10,2) not null check (price >= 0),
   old_price numeric(10,2) check (old_price is null or old_price >= 0),
   image_url text not null,
+  image_urls text[] not null default '{}'::text[] check (coalesce(array_length(image_urls, 1), 0) <= 8),
+  description text not null default '',
   active boolean not null default true,
   stock_quantity integer not null default 0 check (stock_quantity >= 0),
   archived boolean not null default false,
@@ -27,6 +29,13 @@ create table if not exists public.products (
 alter table public.products drop constraint if exists products_category_check;
 alter table public.products add column if not exists stock_quantity integer not null default 0 check (stock_quantity >= 0);
 alter table public.products add column if not exists archived boolean not null default false;
+alter table public.products add column if not exists description text not null default '';
+alter table public.products add column if not exists image_urls text[] not null default '{}'::text[];
+update public.products set image_urls = array[image_url]
+where coalesce(array_length(image_urls, 1), 0) = 0 and image_url <> '';
+alter table public.products drop constraint if exists products_image_urls_limit;
+alter table public.products add constraint products_image_urls_limit
+check (coalesce(array_length(image_urls, 1), 0) <= 8);
 
 create table if not exists public.categories (
   id uuid primary key default gen_random_uuid(),
