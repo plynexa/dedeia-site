@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Product } from "./storefront";
 
 const defaultCategories=["Perfume","Colônia","Sabonete","Desodorante","Kit","Roupas","Acessórios"];
-const empty={id:"",name:"",category:"Perfume",price:0,old_price:null,image_url:"",active:true,stock_quantity:0,archived:false};
+const empty={id:"",name:"",category:"Perfume",price:0,old_price:null,image_url:"",image_urls:[],description:"",active:true,stock_quantity:0,archived:false};
 const money=(v:number)=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 
 export default function AdminPanel({initialProducts,initialCategories=[]}:{initialProducts:Product[];initialCategories?:string[]}) {
@@ -59,7 +59,9 @@ export default function AdminPanel({initialProducts,initialCategories=[]}:{initi
       let image_url=editing.image_url;
       if(file?.size) image_url=await upload(file);
       if(!image_url) throw new Error("Escolha uma foto.");
-      const payload={name:String(form.get("name")),category:String(form.get("category")),price:Number(form.get("price")),old_price:form.get("old_price")?Number(form.get("old_price")):null,image_url,stock_quantity:Number(form.get("stock_quantity")||0),active:true,archived:false};
+      const currentGallery=editing.image_urls?.length?editing.image_urls:[editing.image_url].filter(Boolean);
+      const image_urls=file?.size?[image_url,...currentGallery.filter(url=>url!==editing.image_url)]:currentGallery;
+      const payload={name:String(form.get("name")),description:String(form.get("description")||""),category:String(form.get("category")),price:Number(form.get("price")),old_price:form.get("old_price")?Number(form.get("old_price")):null,image_url,image_urls,stock_quantity:Number(form.get("stock_quantity")||0),active:true,archived:false};
       const supabase=createClient();
       if(!supabase) throw new Error("Sem conexão");
       if(editing.id){
@@ -91,6 +93,7 @@ export default function AdminPanel({initialProducts,initialCategories=[]}:{initi
     {changingPassword&&<div className="overlay"><section className="editor"><button className="close" onClick={()=>setChangingPassword(false)}><X/></button><h2>Alterar senha</h2><p>Use pelo menos 8 caracteres.</p><form onSubmit={changePassword}><label>Nova senha<input name="password" type="password" minLength={8} autoComplete="new-password" required autoFocus/></label><label>Confirmar nova senha<input name="confirmation" type="password" minLength={8} autoComplete="new-password" required/></label><button className="primary" disabled={saving}>{saving?"Alterando...":"Salvar nova senha"}</button></form></section></div>}
     {editing&&<div className="overlay"><section className="editor"><button className="close" onClick={()=>setEditing(null)}><X/></button><h2>{editing.id?"Editar produto":"Novo produto"}</h2><form onSubmit={save}>
       <label>Nome<input name="name" defaultValue={editing.name} required/></label>
+      <label>Descrição<textarea name="description" defaultValue={editing.description||""} rows={4} placeholder="Detalhes do produto"/></label>
       <label>Categoria<select name="category" defaultValue={editing.category}>{(initialCategories.length?initialCategories:defaultCategories).map(c=><option key={c}>{c}</option>)}</select></label>
       <div className="form-row"><label>Preço<input name="price" type="number" min="0" step=".01" defaultValue={editing.price||""} required/></label><label>Preço anterior<input name="old_price" type="number" min="0" step=".01" defaultValue={editing.old_price??""}/></label></div>
       <label>Quantidade em estoque<input name="stock_quantity" type="number" min="0" step="1" defaultValue={editing.stock_quantity??0} required/></label>
