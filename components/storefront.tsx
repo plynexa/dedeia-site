@@ -78,6 +78,24 @@ export default function Storefront() {
     return updated;
   });
   const consult=(product:Product)=>window.open(`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Olá! Gostaria de consultar o preço e encomendar: ${product.name}.`)}`,"_blank","noopener,noreferrer");
+  const checkout=()=>{
+    const items=products.filter(product=>cart[product.id]).map(product=>{
+      const quantity=cart[product.id];
+      return `• ${product.name} — ${quantity}x — ${money(product.price*quantity)}`;
+    });
+    const message=[
+      "Olá! Gostaria de finalizar meu pedido na Loja da Dedeia.",
+      "",
+      "Produtos:",
+      ...items,
+      "",
+      `Quantidade total: ${count} ${count===1?"item":"itens"}`,
+      `Total do carrinho: ${money(total)}`,
+      "",
+      "Pode me ajudar a concluir a compra?",
+    ].join("\n");
+    window.open(`https://wa.me/${whatsapp}?text=${encodeURIComponent(message)}`,"_blank","noopener,noreferrer");
+  };
 
   function addToCart(product:Product,event:MouseEvent<HTMLButtonElement>){
     event.stopPropagation();
@@ -166,7 +184,7 @@ export default function Storefront() {
     {cartOpen&&<div className="overlay" onMouseDown={e=>e.target===e.currentTarget&&setCartOpen(false)}><aside className="cart-panel"><button className="close" onClick={()=>setCartOpen(false)}><X/></button><h2>Seu carrinho</h2>
       {!count?<div className="empty"><ShoppingBag/><h3>Seu carrinho está vazio</h3></div>:<>
         <div className="cart-list">{products.filter(p=>cart[p.id]).map(p=><div className="cart-item" key={p.id}><img src={p.image_url} alt=""/><div><b>{p.name}</b><strong>{money(p.price)}</strong><div className="quantity"><button onClick={()=>change(p.id,-1)}><Minus/></button><span>{cart[p.id]}</span><button onClick={()=>change(p.id,1)}><Plus/></button></div></div></div>)}</div>
-        <div className="total"><span>Total</span><b>{money(total)}</b></div><button className="checkout">Continuar para pagamento</button>
+        <div className="total"><span>Total</span><b>{money(total)}</b></div><button className="checkout" onClick={checkout}>Continuar pelo WhatsApp</button>
       </>}
     </aside></div>}
   </main>;
