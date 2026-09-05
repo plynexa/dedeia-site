@@ -54,7 +54,7 @@ export function ProductEditor({ value, categories, saving, onChange, onClose, on
 
   return (
     <Modal visible animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === "ios" ? "padding" : "height"}>
         <View style={styles.header}>
           <Pressable onPress={onClose} hitSlop={10}><Text style={styles.cancel}>Cancelar</Text></Pressable>
           <Text style={styles.headerTitle}>{value.id ? "Editar produto" : "Novo produto"}</Text>
@@ -62,11 +62,11 @@ export function ProductEditor({ value, categories, saving, onChange, onClose, on
             <Text style={[styles.save, (saving || !hasValidForm) && styles.saveDisabled]}>{saving ? "..." : "Salvar"}</Text>
           </Pressable>
         </View>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView\n          style={styles.scroll}\n          contentContainerStyle={styles.content}\n          keyboardShouldPersistTaps="handled"\n          keyboardDismissMode="on-drag"\n          showsVerticalScrollIndicator\n          nestedScrollEnabled\n        >
           <Text style={styles.sectionTitle}>Prévia ao vivo</Text>
           <View style={styles.preview}>
             <Pressable style={styles.previewImage} onPress={pickImage}>
-              {image ? <Image source={{ uri: image }} style={styles.image} /> : <Text style={styles.bigPlus}>＋</Text>}
+              {image ? <Image source={{ uri: image }} style={styles.image} resizeMode="cover" /> : <Text style={styles.bigPlus}>＋</Text>}
               <View style={styles.photoBadge}><Text style={styles.photoBadgeText}>Trocar foto</Text></View>
             </Pressable>
             <View style={styles.previewBody}>
@@ -114,10 +114,10 @@ const styles = StyleSheet.create({
   header: { height: 64, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderBottomWidth: 1, borderBottomColor: colors.line, backgroundColor: colors.white },
   headerTitle: { fontSize: 18, fontWeight: "900", color: colors.ink },
   cancel: { color: colors.muted, fontWeight: "700" }, save: { color: colors.coralDark, fontWeight: "900" }, saveDisabled: { opacity: 0.4 },
-  content: { padding: 18, paddingBottom: 50 },
+  scroll: { flex: 1 },\n  content: { padding: 18, paddingBottom: 70 },
   sectionTitle: { fontSize: 13, fontWeight: "900", color: colors.coralDark, letterSpacing: 1, marginBottom: 10 },
-  preview: { flexDirection: "row", minHeight: 150, borderRadius: 20, overflow: "hidden", backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, marginBottom: 23 },
-  previewImage: { width: 150, backgroundColor: colors.coralSoft, alignItems: "center", justifyContent: "center" },
+  preview: { flexDirection: "row", height: 132, borderRadius: 20, overflow: "hidden", backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, marginBottom: 23 },
+  previewImage: { width: 132, height: 132, backgroundColor: colors.coralSoft, alignItems: "center", justifyContent: "center" },
   image: { width: "100%", height: "100%" }, bigPlus: { color: colors.coral, fontSize: 64, fontWeight: "200" },
   photoBadge: { position: "absolute", left: 8, bottom: 8, backgroundColor: "#28242bd9", paddingHorizontal: 9, paddingVertical: 5, borderRadius: 9 },
   photoBadgeText: { color: "#fff", fontSize: 11, fontWeight: "800" },
