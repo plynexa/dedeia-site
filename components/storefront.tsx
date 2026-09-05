@@ -79,7 +79,7 @@ export default function Storefront() {
       <div className="catalog-heading"><div><small>CATÁLOGO</small><h2>{category==="Todos"?"Escolhidos para você":category}</h2></div><span>{filtered.length} produtos</span></div>
       <div className="product-grid">{filtered.map(p=>{const out=(p.stock_quantity??1)<=0;return <article className={`product-card${out?" out-of-stock":""}`} key={p.id}>
         <div className="product-photo"><img src={p.image_url} alt={p.name}/>{p.old_price&&<span>OFERTA</span>}</div>
-        <div className="product-body"><small>{p.category}</small><h3>{p.name}</h3>{p.old_price&&<del>{money(p.old_price)}</del>}<strong>{money(p.price)}</strong><p>ou 3x de {money(p.price/3)} sem juros</p>{out?<><span className="stock-status">Fora de estoque • Sob encomenda</span><button className="whatsapp" onClick={()=>consult(p)}>Consultar preço</button></>:<button onClick={()=>change(p.id,1)}><ShoppingBag size={18}/>Adicionar</button>}</div>
+        <div className="product-body"><small>{p.category}</small><h3>{p.name}</h3>{p.old_price&&<del>{money(p.old_price)}</del>}<strong>{money(p.price)}</strong>{out?<><span className="stock-status">Fora de estoque • Sob encomenda</span><button className="whatsapp" onClick={()=>consult(p)}>Consultar preço</button></>:<button onClick={()=>change(p.id,1)}><ShoppingBag size={18}/>Adicionar</button>}</div>
       </article>})}</div>
     </section>
 
