@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { LogOut, PackagePlus, Pencil, Trash2, Upload, X } from "lucide-react";
+import { KeyRound, LogOut, PackagePlus, Pencil, Trash2, Upload, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Product } from "./storefront";
 
@@ -12,6 +12,7 @@ const money=(v:number)=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL
 export default function AdminPanel({initialProducts,initialCategories=[]}:{initialProducts:Product[];initialCategories?:string[]}) {
   const [products,setProducts]=useState(initialProducts);
   const [editing,setEditing]=useState<Product|null>(null);
+  const [changingPassword,setChangingPassword]=useState(false);
   const [saving,setSaving]=useState(false);
   const [message,setMessage]=useState("");
 
@@ -19,6 +20,25 @@ export default function AdminPanel({initialProducts,initialCategories=[]}:{initi
     const supabase=createClient();
     await supabase?.auth.signOut();
     window.location.replace("/admin/login");
+  }
+  async function changePassword(event:FormEvent<HTMLFormElement>){
+    event.preventDefault();
+    const form=new FormData(event.currentTarget);
+    const password=String(form.get("password")||"");
+    const confirmation=String(form.get("confirmation")||"");
+    if(password.length<8){setMessage("A nova senha precisa ter pelo menos 8 caracteres.");return;}
+    if(password!==confirmation){setMessage("As duas senhas estão diferentes.");return;}
+    setSaving(true);setMessage("");
+    try{
+      const supabase=createClient();
+      if(!supabase) throw new Error("Sem conexão com o serviço.");
+      const {error}=await supabase.auth.updateUser({password});
+      if(error) throw error;
+      setChangingPassword(false);
+      setMessage("Senha alterada com sucesso.");
+    }catch(error){
+      setMessage(error instanceof Error?error.message:"Não foi possível alterar a senha.");
+    }finally{setSaving(false);}
   }
   async function upload(file:File){
     const supabase=createClient();
@@ -64,10 +84,11 @@ export default function AdminPanel({initialProducts,initialCategories=[]}:{initi
   }
 
   return <main className="admin-page">
-    <header className="admin-header"><img src="/logo.png" alt="Loja da Dedeia"/><div><h1>Gerenciar produtos</h1><p>{products.length} produtos cadastrados</p></div><button onClick={logout}><LogOut/>Sair</button></header>
+    <header className="admin-header"><img src="/logo.png" alt="Loja da Dedeia"/><div><h1>Gerenciar produtos</h1><p>{products.length} produtos cadastrados</p></div><div className="admin-header-actions"><button onClick={()=>{setMessage("");setChangingPassword(true)}}><KeyRound/><span>Alterar senha</span></button><button onClick={logout}><LogOut/><span>Sair</span></button></div></header>
     <section className="admin-content"><button className="new-product" onClick={()=>setEditing(empty)}><PackagePlus/>Adicionar produto</button>{message&&<div className="notice">{message}</div>}
       <div className="admin-grid">{products.map(p=><article key={p.id}><img src={p.image_url} alt={p.name}/><div><small>{p.category}</small><h2>{p.name}</h2><strong>{money(p.price)}</strong><p className={(p.stock_quantity??0)>0?"admin-stock":"admin-stock out"}>{(p.stock_quantity??0)>0?`${p.stock_quantity} em estoque`:"Fora de estoque"}</p></div><div className="admin-actions"><button onClick={()=>setEditing(p)} aria-label="Editar"><Pencil/></button><button className="danger" onClick={()=>remove(p.id)} aria-label="Excluir"><Trash2/></button></div></article>)}</div>
     </section>
+    {changingPassword&&<div className="overlay"><section className="editor"><button className="close" onClick={()=>setChangingPassword(false)}><X/></button><h2>Alterar senha</h2><p>Use pelo menos 8 caracteres.</p><form onSubmit={changePassword}><label>Nova senha<input name="password" type="password" minLength={8} autoComplete="new-password" required autoFocus/></label><label>Confirmar nova senha<input name="confirmation" type="password" minLength={8} autoComplete="new-password" required/></label><button className="primary" disabled={saving}>{saving?"Alterando...":"Salvar nova senha"}</button></form></section></div>}
     {editing&&<div className="overlay"><section className="editor"><button className="close" onClick={()=>setEditing(null)}><X/></button><h2>{editing.id?"Editar produto":"Novo produto"}</h2><form onSubmit={save}>
       <label>Nome<input name="name" defaultValue={editing.name} required/></label>
       <label>Categoria<select name="category" defaultValue={editing.category}>{(initialCategories.length?initialCategories:defaultCategories).map(c=><option key={c}>{c}</option>)}</select></label>
