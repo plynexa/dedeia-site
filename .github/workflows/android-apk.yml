@@ -1,0 +1,78 @@
+name: Gerar APK Android
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "mobile/**"
+      - ".github/workflows/android-apk.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-apk
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Compilar aplicativo
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    defaults:
+      run:
+        working-directory: mobile
+
+    env:
+      CI: "1"
+      EXPO_NO_TELEMETRY: "1"
+      EXPO_PUBLIC_SUPABASE_URL: "https://rryuiyxlfzanfauuwapf.supabase.co"
+      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_srr3QzSgPWq2xNUp1Inyjw_Mos-BSUk"
+      EXPO_PUBLIC_SITE_URL: "https://loja-da-dedeia.vercel.app"
+
+    steps:
+      - name: Baixar projeto
+        uses: actions/checkout@v4
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Preparar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Verificar TypeScript
+        run: npm run typecheck
+
+      - name: Criar projeto Android
+        run: npx expo prebuild --platform android --clean
+
+      - name: Compilar APK instalável
+        run: |
+          chmod +x android/gradlew
+          cd android
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Preparar arquivo
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Loja-da-Dedeia-Admin.apk
+
+      - name: Publicar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Loja-da-Dedeia-Admin-APK
+          path: mobile/Loja-da-Dedeia-Admin.apk
+          if-no-files-found: error
+          retention-days: 30
