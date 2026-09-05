@@ -12,10 +12,18 @@ export type Product = {
   price: number;
   old_price: number | null;
   image_url: string;
+  image_urls?: string[];
+  description?: string;
   active: boolean;
   archived: boolean;
   stock_quantity: number;
   created_at?: string;
+};
+
+export type ProductDraftImage = {
+  uri: string;
+  local: boolean;
+  mime_type?: string;
 };
 
 export type ProductDraft = {
@@ -25,8 +33,9 @@ export type ProductDraft = {
   price: string;
   old_price: string;
   image_url: string;
-  local_image_uri?: string;
-  image_mime_type?: string;
+  image_urls: string[];
+  images: ProductDraftImage[];
+  description: string;
   stock_quantity: string;
   active: boolean;
   archived: boolean;
