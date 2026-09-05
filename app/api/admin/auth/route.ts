@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
+import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/supabase/config";
 
 const ADMIN_EMAIL = "lojadaddeia@gmail.com";
 
@@ -12,19 +13,7 @@ type CookieToSet = {
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!url || !key) {
-    return NextResponse.json(
-      { error: "A conexão segura ainda não foi configurada." },
-      { status: 503 }
-    );
-  }
-
-  let body: { email?: string; password?: string; mode?: string };
+  let body: { email?: string; password?: string };
   try {
     body = await request.json();
   } catch {
@@ -33,7 +22,6 @@ export async function POST(request: NextRequest) {
 
   const email = body.email?.trim().toLowerCase() ?? "";
   const password = body.password ?? "";
-  const mode = body.mode === "signup" ? "signup" : "login";
 
   if (email !== ADMIN_EMAIL) {
     return NextResponse.json(
@@ -49,7 +37,7 @@ export async function POST(request: NextRequest) {
   }
 
   let cookiesToSet: CookieToSet[] = [];
-  const supabase = createServerClient(url, key, {
+  const supabase = createServerClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll: (items) => {
@@ -59,28 +47,6 @@ export async function POST(request: NextRequest) {
   });
 
   try {
-    if (mode === "signup") {
-      const origin = new URL(request.url).origin;
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: `${origin}/admin` },
-      });
-      if (error) {
-        return NextResponse.json({ error: error.message }, { status: error.status || 400 });
-      }
-
-      const response = NextResponse.json({
-        ok: true,
-        needsConfirmation: !data.session,
-      });
-      response.headers.set("Cache-Control", "private, no-store");
-      cookiesToSet.forEach(({ name, value, options }) =>
-        response.cookies.set(name, value, options)
-      );
-      return response;
-    }
-
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       return NextResponse.json(
@@ -89,7 +55,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const response = NextResponse.json({ ok: true, needsConfirmation: false });
+    const response = NextResponse.json({ ok: true });
     response.headers.set("Cache-Control", "private, no-store");
     cookiesToSet.forEach(({ name, value, options }) =>
       response.cookies.set(name, value, options)
@@ -97,7 +63,7 @@ export async function POST(request: NextRequest) {
     return response;
   } catch {
     return NextResponse.json(
-      { error: "O serviço de acesso está temporariamente indisponível. Tente novamente em alguns minutos." },
+      { error: "O serviço de acesso está temporariamente indisponível." },
       { status: 503 }
     );
   }
