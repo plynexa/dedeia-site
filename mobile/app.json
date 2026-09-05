@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "Loja da Dedeia Admin",
+    "name": "Loja da Dedeia",
     "slug": "loja-da-dedeia-admin",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logo.png",
+    "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -16,7 +16,7 @@
       "package": "com.plynexa.lojadadedeia.admin",
       "versionCode": 1,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logo.png",
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#e95e73"
       },
       "permissions": [
