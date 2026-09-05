@@ -70,6 +70,9 @@ create table if not exists public.audit_events (
   created_at timestamptz not null default now()
 );
 
+create index if not exists admin_devices_user_id_idx on public.admin_devices(user_id);
+create index if not exists audit_events_user_id_idx on public.audit_events(user_id);
+
 create schema if not exists private;
 revoke all on schema private from public;
 grant usage on schema private to anon, authenticated;
@@ -82,7 +85,7 @@ security definer
 set search_path = ''
 as $$
   select exists (
-    select 1 from public.admins where user_id = auth.uid()
+    select 1 from public.admins where user_id = (select auth.uid())
   )
 $$;
 revoke all on function private.is_admin() from public;
@@ -117,7 +120,7 @@ alter table public.audit_events enable row level security;
 
 drop policy if exists "admin lê seu acesso" on public.admins;
 create policy "admin lê seu acesso" on public.admins
-for select to authenticated using (user_id = auth.uid());
+for select to authenticated using (user_id = (select auth.uid()));
 
 drop policy if exists "catálogo público" on public.products;
 create policy "catálogo público" on public.products
@@ -157,13 +160,13 @@ for delete to authenticated using (private.is_admin());
 drop policy if exists "admin registra aparelho" on public.admin_devices;
 create policy "admin registra aparelho" on public.admin_devices
 for insert to authenticated
-with check (user_id = auth.uid() and private.is_admin());
+with check (user_id = (select auth.uid()) and private.is_admin());
 
 drop policy if exists "admin atualiza aparelho" on public.admin_devices;
 create policy "admin atualiza aparelho" on public.admin_devices
 for update to authenticated
-using (user_id = auth.uid() and private.is_admin())
-with check (user_id = auth.uid() and private.is_admin());
+using (user_id = (select auth.uid()) and private.is_admin())
+with check (user_id = (select auth.uid()) and private.is_admin());
 
 drop policy if exists "admin consulta aparelhos" on public.admin_devices;
 create policy "admin consulta aparelhos" on public.admin_devices
@@ -172,7 +175,7 @@ for select to authenticated using (private.is_admin());
 drop policy if exists "admin registra evento" on public.audit_events;
 create policy "admin registra evento" on public.audit_events
 for insert to authenticated
-with check (user_id = auth.uid() and private.is_admin());
+with check (user_id = (select auth.uid()) and private.is_admin());
 
 drop policy if exists "admin consulta eventos" on public.audit_events;
 create policy "admin consulta eventos" on public.audit_events
