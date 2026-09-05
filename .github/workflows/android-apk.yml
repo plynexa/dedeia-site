@@ -59,19 +59,22 @@ jobs:
       - name: Criar projeto Android
         run: npx expo prebuild --platform android --clean
 
-      - name: Compilar APK instalável
+      - name: Compilar APK independente
         run: |
           chmod +x android/gradlew
           cd android
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Confirmar código embutido no APK
+        run: unzip -l android/app/build/outputs/apk/release/app-release.apk | grep -q "assets/index.android.bundle"
 
       - name: Preparar arquivo
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk Loja-da-Dedeia-Admin.apk
+        run: cp android/app/build/outputs/apk/release/app-release.apk Loja-da-Dedeia-Admin-v1.0.1.apk
 
       - name: Publicar APK
         uses: actions/upload-artifact@v4
         with:
           name: Loja-da-Dedeia-Admin-APK
-          path: mobile/Loja-da-Dedeia-Admin.apk
+          path: mobile/Loja-da-Dedeia-Admin-v1.0.1.apk
           if-no-files-found: error
           retention-days: 30
