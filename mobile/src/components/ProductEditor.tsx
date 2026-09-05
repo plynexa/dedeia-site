@@ -62,7 +62,14 @@ export function ProductEditor({ value, categories, saving, onChange, onClose, on
             <Text style={[styles.save, (saving || !hasValidForm) && styles.saveDisabled]}>{saving ? "..." : "Salvar"}</Text>
           </Pressable>
         </View>
-        <ScrollView\n          style={styles.scroll}\n          contentContainerStyle={styles.content}\n          keyboardShouldPersistTaps="handled"\n          keyboardDismissMode="on-drag"\n          showsVerticalScrollIndicator\n          nestedScrollEnabled\n        >
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator
+          nestedScrollEnabled
+        >
           <Text style={styles.sectionTitle}>Prévia ao vivo</Text>
           <View style={styles.preview}>
             <Pressable style={styles.previewImage} onPress={pickImage}>
@@ -114,7 +121,8 @@ const styles = StyleSheet.create({
   header: { height: 64, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderBottomWidth: 1, borderBottomColor: colors.line, backgroundColor: colors.white },
   headerTitle: { fontSize: 18, fontWeight: "900", color: colors.ink },
   cancel: { color: colors.muted, fontWeight: "700" }, save: { color: colors.coralDark, fontWeight: "900" }, saveDisabled: { opacity: 0.4 },
-  scroll: { flex: 1 },\n  content: { padding: 18, paddingBottom: 70 },
+  scroll: { flex: 1 },
+  content: { padding: 18, paddingBottom: 70 },
   sectionTitle: { fontSize: 13, fontWeight: "900", color: colors.coralDark, letterSpacing: 1, marginBottom: 10 },
   preview: { flexDirection: "row", height: 132, borderRadius: 20, overflow: "hidden", backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, marginBottom: 23 },
   previewImage: { width: 132, height: 132, backgroundColor: colors.coralSoft, alignItems: "center", justifyContent: "center" },
