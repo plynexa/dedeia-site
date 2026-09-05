@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/supabase/config";
 
 const ADMIN_EMAIL = "lojadaddeia@gmail.com";
-const INITIAL_PASSWORD = "12345678";
 
 type CookieToSet = {
   name: string;
@@ -14,7 +13,7 @@ type CookieToSet = {
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  let body: { email?: string; password?: string; mode?: string };
+  let body: { email?: string; password?: string };
   try {
     body = await request.json();
   } catch {
@@ -25,7 +24,7 @@ export async function POST(request: NextRequest) {
   const password = body.password ?? "";
 
   if (email !== ADMIN_EMAIL) {
-    return NextResponse.json({ error: "E-mail não autorizado." }, { status: 403 });
+    return NextResponse.json({ error: "Este e-mail não está autorizado." }, { status: 403 });
   }
   if (password.length < 8) {
     return NextResponse.json({ error: "A senha precisa ter pelo menos 8 caracteres." }, { status: 400 });
@@ -40,15 +39,6 @@ export async function POST(request: NextRequest) {
   });
 
   try {
-    if (body.mode === "setup") {
-      if (password !== INITIAL_PASSWORD) {
-        return NextResponse.json({ error: "Configuração negada." }, { status: 403 });
-      }
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) return NextResponse.json({ error: error.message }, { status: error.status || 400 });
-      return NextResponse.json({ ok: true, userId: data.user?.id ?? null });
-    }
-
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       return NextResponse.json({ error: "Login ou senha incorretos." }, { status: error.status || 401 });
