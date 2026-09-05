@@ -2,7 +2,6 @@
 
 import { FormEvent, useState } from "react";
 import { Eye, EyeOff, LockKeyhole } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 
 const ADMIN_EMAIL = "lojadaddeia@gmail.com";
 
@@ -19,34 +18,41 @@ export default function AdminLogin() {
     event.preventDefault();
     setError("");
     setMessage("");
-    const supabase=createClient();
-    if(!supabase){setError("A conexão segura ainda não foi configurada.");return;}
 
     const normalizedEmail=email.trim().toLowerCase();
-    if(firstAccess && normalizedEmail!==ADMIN_EMAIL){
-      setError("Este e-mail não está autorizado para criar o acesso administrativo.");
+    if(normalizedEmail!==ADMIN_EMAIL){
+      setError("Este e-mail não está autorizado para acessar o painel.");
       return;
     }
 
     setLoading(true);
-    if(firstAccess){
-      const {data,error:signUpError}=await supabase.auth.signUp({
-        email:normalizedEmail,
-        password,
-        options:{emailRedirectTo:`${window.location.origin}/admin`}
+    try {
+      const response=await fetch("/api/admin/auth",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        cache:"no-store",
+        body:JSON.stringify({
+          email:normalizedEmail,
+          password,
+          mode:firstAccess?"signup":"login"
+        })
       });
+      const result=await response.json().catch(()=>({error:"Não foi possível concluir o acesso."}));
+      if(!response.ok){
+        setError(result.error||"Não foi possível concluir o acesso.");
+        return;
+      }
+      if(firstAccess&&result.needsConfirmation){
+        setMessage("Conta criada. Abra o e-mail de confirmação e depois entre normalmente.");
+        setFirstAccess(false);
+        return;
+      }
+      window.location.replace("/admin");
+    } catch {
+      setError("Não foi possível falar com o servidor. Verifique sua internet e tente novamente.");
+    } finally {
       setLoading(false);
-      if(signUpError){setError(signUpError.message);return;}
-      if(data.session){window.location.replace("/admin");return;}
-      setMessage("Conta criada. Abra o e-mail de confirmação e depois entre normalmente.");
-      setFirstAccess(false);
-      return;
     }
-
-    const {error:loginError}=await supabase.auth.signInWithPassword({email:normalizedEmail,password});
-    setLoading(false);
-    if(loginError){setError("Login ou senha incorretos.");return;}
-    window.location.replace("/admin");
   }
 
   return <main className="login-page"><section className="login-card">
