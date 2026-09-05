@@ -16,6 +16,7 @@ import * as Crypto from "expo-crypto";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CategoryManager } from "../components/CategoryManager";
 import { ProductEditor } from "../components/ProductEditor";
+import { PasswordManager } from "../components/PasswordManager";
 import { writeAudit } from "../lib/audit";
 import { supabase } from "../lib/supabase";
 import { colors } from "../theme";
@@ -56,6 +57,7 @@ export function DashboardScreen() {
   const [selectionMode, setSelectionMode] = useState(false);
   const [editor, setEditor] = useState<ProductDraft | null>(null);
   const [categoryManager, setCategoryManager] = useState(false);
+  const [passwordManager, setPasswordManager] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -212,7 +214,14 @@ export function DashboardScreen() {
         <Pressable onPress={() => setSelected(new Set(visibleProducts.map((product) => product.id)))}><Text style={styles.topLink}>Todos</Text></Pressable>
       </> : <>
         <Image source={require("../../assets/logo.png")} style={styles.logo} resizeMode="contain" />
-        <Pressable style={styles.logout} onPress={() => void supabase.auth.signOut()}><Text style={styles.logoutText}>Sair</Text></Pressable>
+        <View style={styles.headerActions}>
+          <Pressable style={styles.passwordButton} onPress={() => setPasswordManager(true)}>
+            <Text style={styles.passwordButtonText}>Senha</Text>
+          </Pressable>
+          <Pressable style={styles.logout} onPress={() => void supabase.auth.signOut()}>
+            <Text style={styles.logoutText}>Sair</Text>
+          </Pressable>
+        </View>
       </>}
     </View>
     {selectionMode ? <View style={styles.bulk}>
@@ -253,13 +262,14 @@ export function DashboardScreen() {
     />
     {editor && <ProductEditor value={editor} categories={categories} saving={saving} onChange={setEditor} onClose={() => setEditor(null)} onSave={() => void saveProduct()} />}
     <CategoryManager visible={categoryManager} categories={categories} onClose={() => setCategoryManager(false)} onAdd={addCategory} onRename={renameCategory} onDelete={deleteCategory} />
+    <PasswordManager visible={passwordManager} onClose={() => setPasswordManager(false)} />
   </SafeAreaView>;
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.cream }, loading: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.cream }, loadingText: { color: colors.muted, marginTop: 12 },
   list: { paddingBottom: 45 }, top: { height: 70, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: colors.line },
-  logo: { width: 176, height: 62 }, logout: { paddingHorizontal: 14, paddingVertical: 10, backgroundColor: "#f2eeee", borderRadius: 12 }, logoutText: { color: colors.ink, fontWeight: "800" },
+  logo: { width: 132, height: 58 }, headerActions: { flexDirection: "row", gap: 7 }, passwordButton: { paddingHorizontal: 11, paddingVertical: 10, backgroundColor: colors.coralSoft, borderRadius: 12 }, passwordButtonText: { color: colors.coralDark, fontWeight: "900" }, logout: { paddingHorizontal: 12, paddingVertical: 10, backgroundColor: "#f2eeee", borderRadius: 12 }, logoutText: { color: colors.ink, fontWeight: "800" },
   topTitle: { color: colors.ink, fontSize: 17, fontWeight: "900" }, topLink: { color: colors.coralDark, fontWeight: "900", padding: 6 },
   tools: { flexDirection: "row", gap: 8, padding: 12, paddingBottom: 6 }, toolButton: { flex: 1, minHeight: 44, borderRadius: 13, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, alignItems: "center", justifyContent: "center" },
   toolText: { color: colors.ink, fontSize: 13, fontWeight: "800" }, toolActive: { backgroundColor: colors.ink }, toolActiveText: { color: colors.white }, categoryButton: { flex: 1, minHeight: 44, borderRadius: 13, backgroundColor: colors.coral, alignItems: "center", justifyContent: "center" }, categoryButtonText: { color: colors.white, fontSize: 13, fontWeight: "900" },
