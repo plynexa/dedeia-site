@@ -114,6 +114,7 @@ Loja pública:
 - preço e estoque;
 - produto esgotado com consulta por WhatsApp;
 - carrinho;
+- finalização pelo WhatsApp com produtos, quantidades, subtotais e total do pedido;
 - animação de produto indo para o carrinho;
 - sem promessa fixa de parcelamento sem juros.
 
