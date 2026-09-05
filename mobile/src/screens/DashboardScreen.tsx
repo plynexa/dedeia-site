@@ -32,6 +32,9 @@ function draftFrom(product?: Product, category = ""): ProductDraft {
     price: String(product.price).replace(".", ","),
     old_price: product.old_price === null ? "" : String(product.old_price).replace(".", ","),
     image_url: product.image_url,
+    image_urls: product.image_urls?.length ? product.image_urls : [product.image_url],
+    images: (product.image_urls?.length ? product.image_urls : [product.image_url]).filter(Boolean).map((uri) => ({ uri, local: false })),
+    description: product.description || "",
     stock_quantity: String(product.stock_quantity),
     active: product.active,
     archived: product.archived,
@@ -41,6 +44,9 @@ function draftFrom(product?: Product, category = ""): ProductDraft {
     price: "",
     old_price: "",
     image_url: "",
+    image_urls: [],
+    images: [],
+    description: "",
     stock_quantity: "0",
     active: true,
     archived: false,
@@ -98,29 +104,39 @@ export function DashboardScreen() {
     setSelected(new Set());
   }
 
-  async function uploadImage(draft: ProductDraft) {
-    if (!draft.local_image_uri) return draft.image_url;
-    const response = await fetch(draft.local_image_uri);
-    const bytes = await response.arrayBuffer();
-    const mime = draft.image_mime_type || "image/jpeg";
-    const extension = mime.includes("png") ? "png" : mime.includes("webp") ? "webp" : "jpg";
-    const path = `${Crypto.randomUUID()}.${extension}`;
-    const result = await supabase.storage.from("product-images").upload(path, bytes, { contentType: mime });
-    if (result.error) throw result.error;
-    return supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl;
+  async function uploadImages(draft: ProductDraft) {
+    const urls: string[] = [];
+    for (const image of draft.images) {
+      if (!image.local) {
+        urls.push(image.uri);
+        continue;
+      }
+      const response = await fetch(image.uri);
+      const bytes = await response.arrayBuffer();
+      const mime = image.mime_type || "image/jpeg";
+      const extension = mime.includes("png") ? "png" : mime.includes("webp") ? "webp" : "jpg";
+      const path = `${Crypto.randomUUID()}.${extension}`;
+      const result = await supabase.storage.from("product-images").upload(path, bytes, { contentType: mime });
+      if (result.error) throw result.error;
+      urls.push(supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl);
+    }
+    return urls;
   }
 
   async function saveProduct() {
     if (!editor) return;
     setSaving(true);
     try {
-      const image_url = await uploadImage(editor);
+      const image_urls = await uploadImages(editor);
+      if (!image_urls.length) throw new Error("Escolha pelo menos uma foto.");
       const payload = {
         name: editor.name.trim(),
         category: editor.category,
         price: Number(editor.price.replace(",", ".")),
         old_price: editor.old_price ? Number(editor.old_price.replace(",", ".")) : null,
-        image_url,
+        image_url: image_urls[0],
+        image_urls,
+        description: editor.description.trim(),
         stock_quantity: Number(editor.stock_quantity || 0),
         active: editor.active,
         archived: false,
