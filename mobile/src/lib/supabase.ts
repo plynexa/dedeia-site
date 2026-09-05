@@ -2,12 +2,12 @@ import { AppState, Platform } from "react-native";
 import "expo-sqlite/localStorage/install";
 import { createClient } from "@supabase/supabase-js";
 
-const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
-if (!url || !key) {
-  throw new Error("Configure EXPO_PUBLIC_SUPABASE_URL e EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY.");
-}
+const url =
+  process.env.EXPO_PUBLIC_SUPABASE_URL ||
+  "https://rryuiyxlfzanfauuwapf.supabase.co";
+const key =
+  process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  "sb_publishable_srr3QzSgPWq2xNUp1Inyjw_Mos-BSUk";
 
 export const supabase = createClient(url, key, {
   auth: {
